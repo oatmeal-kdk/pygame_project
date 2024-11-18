@@ -34,9 +34,9 @@ class Block(Basic):
         pygame.draw.rect(surface, self.color, self.rect)
     
     def collide(self):
-        # ============================================
-        # TODO: Implement an event when block collides with a ball
-        pass
+        # 블록이 공과 충돌할 때 블록을 제거
+        self.alive = False
+        return True
 
 
 class Paddle(Basic):
@@ -66,23 +66,33 @@ class Ball(Basic):
         pygame.draw.ellipse(surface, self.color, self.rect)
 
     def collide_block(self, blocks: list):
-        # ============================================
-        # TODO: Implement an event when the ball hits a block
-        pass
+        for block in blocks[:]:  # 리스트 복사본으로 순회
+            if block.alive and self.rect.colliderect(block.rect):
+                # 충돌 방향에 따라 공의 방향 변경
+                if self.rect.bottom >= block.rect.top and self.rect.top <= block.rect.bottom:
+                    self.dir = 180 - self.dir  # 좌우 충돌
+                else:
+                    self.dir = 360 - self.dir  # 상하 충돌
+                
+                self.dir += random.randint(-5, 5)  # 약간의 랜덤성 추가
+                block.collide()  # 블록 제거
+                blocks.remove(block)  # 블록 리스트에서 제거
+                return True
+        return False
 
     def collide_paddle(self, paddle: Paddle) -> None:
         if self.rect.colliderect(paddle.rect):
             self.dir = 360 - self.dir + random.randint(-5, 5)
 
     def hit_wall(self):
-        # ============================================
-        # TODO: Implement a service that bounces off when the ball hits the wall
-        pass
         # 좌우 벽 충돌
+        if self.rect.left <= 0 or self.rect.right >= config.display_dimension[0]:
+            self.dir = 180 - self.dir
         
         # 상단 벽 충돌
-    
+        if self.rect.top <= 0:
+            self.dir = 360 - self.dir
+
     def alive(self):
-        # ============================================
-        # TODO: Implement a service that returns whether the ball is alive or not
-        pass
+        # 공이 화면 아래로 떨어졌는지 확인
+        return self.rect.bottom < config.display_dimension[1]
